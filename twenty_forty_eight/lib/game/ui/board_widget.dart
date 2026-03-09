@@ -8,6 +8,18 @@ import 'tile_widget.dart';
 class BoardWidget extends StatelessWidget {
   const BoardWidget({super.key});
 
+  /// Size of each tile in logical pixels.
+  static const double tileSize = 76.0;
+
+  /// Gap between tiles (and around the grid).
+  static const double gap = 8.0;
+
+  /// Total board width/height.
+  static const double boardSize = 4 * tileSize + 5 * gap;
+
+  static double _left(int col) => gap + col * (tileSize + gap);
+  static double _top(int row) => gap + row * (tileSize + gap);
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GameBloc, GameState>(
@@ -27,21 +39,53 @@ class BoardWidget extends StatelessWidget {
               context.read<GameBloc>().add(SwipeDown());
             }
           },
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 16,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
+          child: Container(
+            width: boardSize,
+            height: boardSize,
+            decoration: BoxDecoration(
+              color: const Color(0xFFBBADA0),
+              borderRadius: BorderRadius.circular(8),
             ),
-            itemBuilder: (context, index) {
-              final row = index ~/ 4;
-              final col = index % 4;
+            child: Stack(
+              children: [
+                // Empty cell backgrounds
+                ...List.generate(16, (i) {
+                  final row = i ~/ 4;
+                  final col = i % 4;
+                  return Positioned(
+                    left: _left(col),
+                    top: _top(row),
+                    width: tileSize,
+                    height: tileSize,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCDC1B4),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  );
+                }),
 
-              final value = state.board[row][col];
-
-              return TileWidget(value: value);
-            },
+                // Tiles — keyed by stable id so AnimatedPositioned
+                // interpolates each tile's position across moves.
+                ...state.tiles.map((tile) {
+                  return AnimatedPositioned(
+                    key: ValueKey(tile.id),
+                    duration: const Duration(milliseconds: 150),
+                    curve: Curves.easeInOut,
+                    left: _left(tile.col),
+                    top: _top(tile.row),
+                    width: tileSize,
+                    height: tileSize,
+                    child: TileWidget(
+                      value: tile.value,
+                      isNew: tile.isNew,
+                      isMerged: tile.isMerged,
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
         );
       },

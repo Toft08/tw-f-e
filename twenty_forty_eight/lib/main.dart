@@ -30,7 +30,17 @@ class GamePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("2048")),
+      appBar: AppBar(
+        title: const Text(
+          "2048",
+          style: TextStyle(
+            color: Color(0xFFBBADA0),
+            fontSize: 42,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+          ),
+        ),
+      ),
       body: BlocListener<GameBloc, GameState>(
         listenWhen: (prev, curr) => !prev.gameOver && curr.gameOver,
         listener: (context, state) {
@@ -62,16 +72,16 @@ class GamePage extends StatelessWidget {
                   children: [
                     _ScoreBox(label: "SCORE", value: state.score),
                     _ScoreBox(label: "BEST", value: state.bestScore),
+                    ElevatedButton(
+                      onPressed: () => context.read<GameBloc>().add(RestartGame()),
+                      child: const Icon(Icons.refresh_outlined),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
               const BoardWidget(),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => context.read<GameBloc>().add(RestartGame()),
-                child: const Text("Restart"),
-              ),
             ],
           ),
         ),
@@ -91,7 +101,7 @@ class _ScoreBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.orange.shade300,
+        color: const Color(0xFFCDC1B4),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

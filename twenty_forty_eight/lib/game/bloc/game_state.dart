@@ -1,24 +1,26 @@
+import '../models/tile.dart';
+
 class GameState {
-  final List<List<int>> board;
+  final List<Tile> tiles;
   final int score;
   final int bestScore;
   final bool gameOver;
 
   GameState({
-    required this.board,
+    required this.tiles,
     required this.score,
     required this.bestScore,
     required this.gameOver,
   });
 
   GameState copyWith({
-    List<List<int>>? board,
+    List<Tile>? tiles,
     int? score,
     int? bestScore,
     bool? gameOver,
   }) {
     return GameState(
-      board: board ?? this.board,
+      tiles: tiles ?? this.tiles,
       score: score ?? this.score,
       bestScore: bestScore ?? this.bestScore,
       gameOver: gameOver ?? this.gameOver,

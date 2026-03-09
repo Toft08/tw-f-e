@@ -1,12 +1,85 @@
 import 'package:flutter/material.dart';
 
-class TileWidget extends StatelessWidget {
+class TileWidget extends StatefulWidget {
   final int value;
 
-  const TileWidget({super.key, required this.value});
+  /// True on the frame this tile first appears — drives a scale-in animation.
+  final bool isNew;
 
-  Color getColor() {
-    switch (value) {
+  /// True on the frame two tiles merged into this one — drives a pop animation.
+  final bool isMerged;
+
+  const TileWidget({
+    super.key,
+    required this.value,
+    this.isNew = false,
+    this.isMerged = false,
+  });
+
+  @override
+  State<TileWidget> createState() => _TileWidgetState();
+}
+
+class _TileWidgetState extends State<TileWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this);
+    _play(widget.isNew, widget.isMerged);
+  }
+
+  @override
+  void didUpdateWidget(TileWidget old) {
+    super.didUpdateWidget(old);
+    if (widget.isMerged && !old.isMerged) {
+      _play(false, true);
+    } else if (widget.isNew && !old.isNew) {
+      _play(true, false);
+    }
+  }
+
+  void _play(bool isNew, bool isMerged) {
+    _ctrl.stop();
+    if (isNew) {
+      // Scale in: 0 → 1 with elastic overshoot.
+      _ctrl.duration = const Duration(milliseconds: 250);
+      _scale = Tween(begin: 0.0, end: 1.0)
+          .animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
+      _ctrl.forward(from: 0);
+    } else if (isMerged) {
+      // Pop: 1 → 1.25 → 1.
+      _ctrl.duration = const Duration(milliseconds: 200);
+      _scale = TweenSequence<double>([
+        TweenSequenceItem(
+            tween: Tween(begin: 1.0, end: 1.25)
+                .chain(CurveTween(curve: Curves.easeOut)),
+            weight: 40),
+        TweenSequenceItem(
+            tween: Tween(begin: 1.25, end: 1.0)
+                .chain(CurveTween(curve: Curves.easeIn)),
+            weight: 60),
+      ]).animate(_ctrl);
+      _ctrl.forward(from: 0);
+    } else {
+      // No animation — stay at full scale.
+      _ctrl.duration = const Duration(milliseconds: 1);
+      _scale = ConstantTween<double>(1.0).animate(_ctrl);
+      _ctrl.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Color _getColor() {
+    switch (widget.value) {
       case 2:
         return Colors.grey.shade300;
       case 4:
@@ -28,31 +101,32 @@ class TileWidget extends StatelessWidget {
       case 1024:
         return Colors.yellow.shade700;
       case 2048:
-        return Colors.yellow.shade600;
+        return Colors.black;
       default:
-        return Colors.brown.shade400;
+        return Colors.black;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      /// animation duration
-      duration: const Duration(milliseconds: 200),
-
-      margin: const EdgeInsets.all(4),
-
-      decoration: BoxDecoration(
-        color: getColor(),
-        borderRadius: BorderRadius.circular(8),
-      ),
-
-      child: Center(
-        child: Text(
-          value == 0 ? "" : "$value",
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+    final int v = widget.value;
+    return AnimatedBuilder(
+      animation: _scale,
+      builder: (context, child) =>
+          Transform.scale(scale: _scale.value, child: child),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _getColor(),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Center(
+          child: Text(
+            '$v',
+            style: TextStyle(
+              fontSize: v < 100 ? 28 : (v < 1000 ? 22 : 18),
+              fontWeight: FontWeight.bold,
+              color: v <= 4 ? Colors.brown.shade700 : Colors.white,
+            ),
           ),
         ),
       ),
