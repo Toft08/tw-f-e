@@ -119,13 +119,17 @@ class _TileWidgetState extends State<TileWidget>
           color: _getColor(),
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Center(
-          child: Text(
-            '$v',
-            style: TextStyle(
-              fontSize: v < 100 ? 28 : (v < 1000 ? 22 : 18),
-              fontWeight: FontWeight.bold,
-              color: v <= 4 ? Colors.brown.shade700 : Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '$v',
+              style: TextStyle(
+                fontSize: v < 100 ? 28 : (v < 1000 ? 22 : 18),
+                fontWeight: FontWeight.bold,
+                color: v <= 4 ? Colors.brown.shade700 : Colors.white,
+              ),
             ),
           ),
         ),

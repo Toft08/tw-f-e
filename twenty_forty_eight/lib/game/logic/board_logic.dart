@@ -9,25 +9,23 @@ class MoveResult {
 }
 
 class BoardLogic {
-  static const int size = 4;
-
   /// Auto-incrementing counter so every tile ever created has a unique id.
   static int _nextId = 0;
   static int _genId() => _nextId++;
 
   /// Creates the three (or four) starting tiles.
-  static List<Tile> initialTiles() {
+  static List<Tile> initialTiles(int size) {
     final tiles = <Tile>[];
-    addRandomTile(tiles);
-    addRandomTile(tiles);
-    addRandomTile(tiles);
+    addRandomTile(tiles, size);
+    addRandomTile(tiles, size);
+    addRandomTile(tiles, size);
     return tiles;
   }
 
   /// Adds one random tile (value 2 or 4) to an empty cell.
-  static void addRandomTile(List<Tile> tiles) {
+  static void addRandomTile(List<Tile> tiles, int size) {
     final occupied = <String>{};
-    for (final t in tiles) occupied.add('${t.row},${t.col}');
+    for (final t in tiles) { occupied.add('${t.row},${t.col}'); }
 
     final empty = <List<int>>[];
     for (int r = 0; r < size; r++) {
@@ -75,7 +73,7 @@ class BoardLogic {
     return (result, score);
   }
 
-  static MoveResult moveLeft(List<Tile> tiles) {
+  static MoveResult moveLeft(List<Tile> tiles, int size) {
     int score = 0;
     final result = <Tile>[];
     for (int r = 0; r < size; r++) {
@@ -86,7 +84,7 @@ class BoardLogic {
     return MoveResult(tiles: result, score: score);
   }
 
-  static MoveResult moveRight(List<Tile> tiles) {
+  static MoveResult moveRight(List<Tile> tiles, int size) {
     int score = 0;
     final result = <Tile>[];
     for (int r = 0; r < size; r++) {
@@ -100,7 +98,7 @@ class BoardLogic {
     return MoveResult(tiles: result, score: score);
   }
 
-  static MoveResult moveUp(List<Tile> tiles) {
+  static MoveResult moveUp(List<Tile> tiles, int size) {
     int score = 0;
     final result = <Tile>[];
     for (int c = 0; c < size; c++) {
@@ -114,7 +112,7 @@ class BoardLogic {
     return MoveResult(tiles: result, score: score);
   }
 
-  static MoveResult moveDown(List<Tile> tiles) {
+  static MoveResult moveDown(List<Tile> tiles, int size) {
     int score = 0;
     final result = <Tile>[];
     for (int c = 0; c < size; c++) {
@@ -142,7 +140,7 @@ class BoardLogic {
   }
 
   /// Returns true when the board has no empty cells and no adjacent equal tiles.
-  static bool isGameOver(List<Tile> tiles) {
+  static bool isGameOver(List<Tile> tiles, int size) {
     if (tiles.length < size * size) return false;
 
     // Horizontal adjacency

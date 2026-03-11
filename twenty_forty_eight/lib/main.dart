@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '2048',
       home: BlocProvider(
-        create: (_) => GameBloc()..add(StartGame()),
+        create: (_) => GameBloc(),
         child: const GamePage(),
       ),
     );
@@ -42,25 +42,51 @@ class GamePage extends StatelessWidget {
         ),
       ),
       body: BlocListener<GameBloc, GameState>(
-        listenWhen: (prev, curr) => !prev.gameOver && curr.gameOver,
+        listenWhen: (prev, curr) =>
+            (!prev.gameOver && curr.gameOver) ||
+            (!prev.hasWon && curr.hasWon),
         listener: (context, state) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => AlertDialog(
-              title: const Text("Game Over"),
-              content: Text("Final score: ${state.score}"),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.read<GameBloc>().add(RestartGame());
-                  },
-                  child: const Text("Play Again"),
-                ),
-              ],
-            ),
-          );
+          if (state.hasWon && !state.gameOver) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => AlertDialog(
+                title: const Text("🎉 You Win!"),
+                content: Text("You reached 2048!\nScore: ${state.score}"),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text("Keep Playing"),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.read<GameBloc>().add(RestartGame());
+                    },
+                    child: const Text("New Game"),
+                  ),
+                ],
+              ),
+            );
+          } else if (state.gameOver) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => AlertDialog(
+                title: const Text("Game Over"),
+                content: Text("Final score: ${state.score}"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.read<GameBloc>().add(RestartGame());
+                    },
+                    child: const Text("Play Again"),
+                  ),
+                ],
+              ),
+            );
+          }
         },
         child: Center(
           child: Column(
@@ -71,7 +97,7 @@ class GamePage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _ScoreBox(label: "SCORE", value: state.score),
-                    _ScoreBox(label: "BEST", value: state.bestScore),
+                    _ScoreBox(label: "BEST ${state.gridSize}×${state.gridSize}", value: state.bestScore),
                     ElevatedButton(
                       onPressed: () => context.read<GameBloc>().add(RestartGame()),
                       child: const Icon(Icons.refresh_outlined),
@@ -80,6 +106,59 @@ class GamePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
+              BlocBuilder<GameBloc, GameState>(
+                builder: (context, state) => Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [4, 5, 6].map((size) {
+                    final active = state.gridSize == size;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: FilledButton.tonal(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: active
+                              ? const Color(0xFFBBADA0)
+                              : const Color(0xFFEDE0D4),
+                          foregroundColor: active
+                              ? Colors.white
+                              : const Color(0xFF776E65),
+                        ),
+                        onPressed: active
+                            ? null
+                            : () async {
+                                final confirmed = await showDialog<bool>(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                    title: const Text('Switch grid size?'),
+                                    content: Text(
+                                      'Your current game will be lost.\nSwitch to $size×$size?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(false),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(true),
+                                        child: const Text('Switch'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirmed == true && context.mounted) {
+                                  context
+                                      .read<GameBloc>()
+                                      .add(ChangeGridSize(size));
+                                }
+                              },
+                        child: Text('$size×$size'),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
               const BoardWidget(),
               const SizedBox(height: 20),
             ],

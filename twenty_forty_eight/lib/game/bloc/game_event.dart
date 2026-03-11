@@ -6,6 +6,11 @@ class RestartGame extends GameEvent {}
 
 class LoadBestScore extends GameEvent {}
 
+class ChangeGridSize extends GameEvent {
+  final int size;
+  ChangeGridSize(this.size);
+}
+
 // Swipe directions
 class SwipeLeft extends GameEvent {}
 
