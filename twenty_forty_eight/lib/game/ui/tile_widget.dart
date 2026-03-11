@@ -9,11 +9,15 @@ class TileWidget extends StatefulWidget {
   /// True on the frame two tiles merged into this one — drives a pop animation.
   final bool isMerged;
 
+  /// The size of the tile in pixels, used to scale the font proportionally.
+  final double tileSize;
+
   const TileWidget({
     super.key,
     required this.value,
     this.isNew = false,
     this.isMerged = false,
+    required this.tileSize,
   });
 
   @override
@@ -47,21 +51,29 @@ class _TileWidgetState extends State<TileWidget>
     if (isNew) {
       // Scale in: 0 → 1 with elastic overshoot.
       _ctrl.duration = const Duration(milliseconds: 250);
-      _scale = Tween(begin: 0.0, end: 1.0)
-          .animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
+      _scale = Tween(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
       _ctrl.forward(from: 0);
     } else if (isMerged) {
       // Pop: 1 → 1.25 → 1.
       _ctrl.duration = const Duration(milliseconds: 200);
       _scale = TweenSequence<double>([
         TweenSequenceItem(
-            tween: Tween(begin: 1.0, end: 1.25)
-                .chain(CurveTween(curve: Curves.easeOut)),
-            weight: 40),
+          tween: Tween(
+            begin: 1.0,
+            end: 1.25,
+          ).chain(CurveTween(curve: Curves.easeOut)),
+          weight: 40,
+        ),
         TweenSequenceItem(
-            tween: Tween(begin: 1.25, end: 1.0)
-                .chain(CurveTween(curve: Curves.easeIn)),
-            weight: 60),
+          tween: Tween(
+            begin: 1.25,
+            end: 1.0,
+          ).chain(CurveTween(curve: Curves.easeIn)),
+          weight: 60,
+        ),
       ]).animate(_ctrl);
       _ctrl.forward(from: 0);
     } else {
@@ -110,6 +122,13 @@ class _TileWidgetState extends State<TileWidget>
   @override
   Widget build(BuildContext context) {
     final int v = widget.value;
+    // Scale font size proportionally with tile size
+    // Base: 60px tile → 28px font for small numbers
+    final baseFontSize = widget.tileSize * 0.45;
+    final fontSize = v < 100
+        ? baseFontSize
+        : (v < 1000 ? baseFontSize * 0.8 : baseFontSize * 0.65);
+
     return AnimatedBuilder(
       animation: _scale,
       builder: (context, child) =>
@@ -119,17 +138,13 @@ class _TileWidgetState extends State<TileWidget>
           color: _getColor(),
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              '$v',
-              style: TextStyle(
-                fontSize: v < 100 ? 28 : (v < 1000 ? 22 : 18),
-                fontWeight: FontWeight.bold,
-                color: v <= 4 ? Colors.brown.shade700 : Colors.white,
-              ),
+        child: Center(
+          child: Text(
+            '$v',
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.bold,
+              color: v <= 4 ? Colors.brown.shade700 : Colors.white,
             ),
           ),
         ),

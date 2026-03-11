@@ -11,8 +11,8 @@ class BoardWidget extends StatelessWidget {
   /// Gap between tiles (and around the grid).
   static const double gap = 8.0;
 
-  /// Maximum board size on large screens.
-  static const double maxBoardSize = 400.0;
+  /// Margin around the board to prevent edge touching.
+  static const double boardMargin = 16.0;
 
   /// Tile size derived from the board pixel size and grid dimension.
   static double _tileSize(double boardPixels, int gridSize) =>
@@ -29,11 +29,14 @@ class BoardWidget extends StatelessWidget {
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            // Use available width (minus a small margin), capped at maxBoardSize.
+            // Use full available width minus margins for maximum responsiveness.
             final availableWidth = constraints.maxWidth.isFinite
                 ? constraints.maxWidth
-                : maxBoardSize;
-            final boardPixels = (availableWidth - 32.0).clamp(0.0, maxBoardSize);
+                : 600.0; // Fallback for infinite constraints
+            final boardPixels = (availableWidth - (boardMargin * 2)).clamp(
+              200.0,
+              double.infinity,
+            );
             final tileSize = _tileSize(boardPixels, gridSize);
 
             return GestureDetector(
@@ -93,6 +96,7 @@ class BoardWidget extends StatelessWidget {
                           value: tile.value,
                           isNew: tile.isNew,
                           isMerged: tile.isMerged,
+                          tileSize: tileSize,
                         ),
                       );
                     }),
