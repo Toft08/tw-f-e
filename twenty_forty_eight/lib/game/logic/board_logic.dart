@@ -13,19 +13,23 @@ class BoardLogic {
   static int _nextId = 0;
   static int _genId() => _nextId++;
 
-  /// Creates the three (or four) starting tiles.
+  /// Creates three or four starting tiles randomly.
   static List<Tile> initialTiles(int size) {
     final tiles = <Tile>[];
-    addRandomTile(tiles, size);
-    addRandomTile(tiles, size);
-    addRandomTile(tiles, size);
+    final rand = Random();
+    final count = rand.nextInt(2) + 3; // 3 or 4 tiles
+    for (int i = 0; i < count; i++) {
+      addRandomTile(tiles, size);
+    }
     return tiles;
   }
 
   /// Adds one random tile (value 2 or 4) to an empty cell.
   static void addRandomTile(List<Tile> tiles, int size) {
     final occupied = <String>{};
-    for (final t in tiles) { occupied.add('${t.row},${t.col}'); }
+    for (final t in tiles) {
+      occupied.add('${t.row},${t.col}');
+    }
 
     final empty = <List<int>>[];
     for (int r = 0; r < size; r++) {
@@ -37,13 +41,15 @@ class BoardLogic {
 
     final rand = Random();
     final pos = empty[rand.nextInt(empty.length)];
-    tiles.add(Tile(
-      id: _genId(),
-      value: rand.nextBool() ? 2 : 4,
-      row: pos[0],
-      col: pos[1],
-      isNew: true,
-    ));
+    tiles.add(
+      Tile(
+        id: _genId(),
+        value: rand.nextBool() ? 2 : 4,
+        row: pos[0],
+        col: pos[1],
+        isNew: true,
+      ),
+    );
   }
 
   /// Merges a single row of tiles leftward.
@@ -61,11 +67,19 @@ class BoardLogic {
         // Merge: keep the first tile's id, double its value, mark as merged.
         final merged = sorted[i].value * 2;
         score += merged;
-        result.add(sorted[i].copyWith(
-            value: merged, col: targetCol, isNew: false, isMerged: true));
+        result.add(
+          sorted[i].copyWith(
+            value: merged,
+            col: targetCol,
+            isNew: false,
+            isMerged: true,
+          ),
+        );
         i += 2; // consumed two tiles
       } else {
-        result.add(sorted[i].copyWith(col: targetCol, isNew: false, isMerged: false));
+        result.add(
+          sorted[i].copyWith(col: targetCol, isNew: false, isMerged: false),
+        );
         i++;
       }
       targetCol++;
@@ -90,7 +104,9 @@ class BoardLogic {
     for (int r = 0; r < size; r++) {
       final rowTiles = tiles.where((t) => t.row == r).toList();
       // Mirror columns, merge left, mirror back.
-      final mirrored = rowTiles.map((t) => t.copyWith(col: size - 1 - t.col)).toList();
+      final mirrored = rowTiles
+          .map((t) => t.copyWith(col: size - 1 - t.col))
+          .toList();
       final (merged, s) = _mergeLeft(mirrored);
       result.addAll(merged.map((t) => t.copyWith(col: size - 1 - t.col)));
       score += s;
@@ -118,9 +134,13 @@ class BoardLogic {
     for (int c = 0; c < size; c++) {
       final colTiles = tiles.where((t) => t.col == c).toList();
       // Mirror rows, merge left, mirror back.
-      final mirrored = colTiles.map((t) => t.copyWith(col: size - 1 - t.row)).toList();
+      final mirrored = colTiles
+          .map((t) => t.copyWith(col: size - 1 - t.row))
+          .toList();
       final (merged, s) = _mergeLeft(mirrored);
-      result.addAll(merged.map((t) => t.copyWith(row: size - 1 - t.col, col: c)));
+      result.addAll(
+        merged.map((t) => t.copyWith(row: size - 1 - t.col, col: c)),
+      );
       score += s;
     }
     return MoveResult(tiles: result, score: score);
